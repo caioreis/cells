@@ -31,10 +31,11 @@ module Cell
     # Its return value is captured and joined.
     def join(separator="", &block)
       state = @cell_class.version_procs.keys.first
-      cached_keys = get_cached_keys(state) if state
+      cached_keys = build_cache_keys(state) if state
+      cached_cells = {}
 
       if cached_keys.any?
-        cached_cells = Rails.cache.read_multi(*cached_keys.values)
+        cached_cells = fetch_collection(cached_keys.values)
       end
       
       @ary.each_with_index.collect do |model, i|
@@ -47,15 +48,29 @@ module Cell
       end.join(separator)
     end
 
-    def get_cached_keys(state)
-      items_to_key = {}
+    def build_cache_keys(state)
+      keys_map = {}
 
-      @ary.each do |model|
-        cell = @cell_class.build(model, @options)
-        items_to_key[model] = @cell_class.state_cache_key(state, cell.class.version_procs[state].(cell, @options))
+      @ary.each do |collection_item|
+        cell = @cell_class.build(collection_item, @options)
+        procs = cell.class.version_procs[state].(cell, @options)
+        next unless cell.cache?(state, @options)
+        keys_map[collection_item] = @cell_class.state_cache_key(state, procs)
       end
-      
-      items_to_key
+
+      keys_map
+    end
+
+    private
+
+    def fetch_collection(cached_keys)
+      #TODO - move this fetch to caching.rb
+      collection_cache.read_multi(*cached_keys)
+    end
+    
+    def collection_cache
+      #TODO - implement cache store for class so we don't need to ask for child method
+      @collection_cache ||= @cell_class.build(@ary.first).cache_store
     end
 
     module Layout
