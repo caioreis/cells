@@ -30,9 +30,11 @@ module Cell
     # The passed block receives that cell and the index.
     # Its return value is captured and joined.
     def join(separator="", &block)
+      cached_cells = {}
+      cached_keys = {}
+      
       state = @cell_class.version_procs.keys.first
       cached_keys = build_cache_keys(state) if state
-      cached_cells = {}
 
       if cached_keys.any?
         cached_cells = fetch_collection(cached_keys.values)
