@@ -42,7 +42,7 @@ module Cell
       
       @ary.each_with_index.collect do |model, i|
         if cached_cell = cached_cells[cached_keys[model]]
-          cached_cell
+          block_given? ? yield(cached_cell, i) : cached_cell
         else
           cell = @cell_class.build(model, @options)
           block_given? ? yield(cell, i) : cell
