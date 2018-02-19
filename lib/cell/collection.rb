@@ -39,9 +39,9 @@ module Cell
       if cached_keys.any?
         cached_cells = fetch_collection(cached_keys.values)
       end
-      
+
       @ary.each_with_index.collect do |model, i|
-        key = model.try(:id) || model
+        key = (model.methods.include?(:try)) ? model.try(:id) : model
         if cached_cell = cached_cells[cached_keys[key]]
           block_given? ? yield(cached_cell, i) : cached_cell
         else
@@ -58,7 +58,7 @@ module Cell
         cell = @cell_class.build(collection_item, @options)
         procs = cell.class.version_procs[state].(cell, @options)
         next unless cell.cache?(state, @options)
-        key = collection_item.try(:id) || collection_item
+        key = (collection_item.methods.include?(:try)) ? collection_item.try(:id) : model
         keys_map[key] = @cell_class.state_cache_key(state, procs)
       end
 
