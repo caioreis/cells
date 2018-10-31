@@ -69,7 +69,7 @@ module Cell
 
     def fetch_collection(cached_keys)
       #TODO - move this fetch to caching.rb
-      collection_cache.read_multi(*cached_keys)
+      collection_cache.read_multi(*cached_keys) || {}
     end
     
     def collection_cache
